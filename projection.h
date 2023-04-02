@@ -8,7 +8,7 @@ class Projection
 public:
     Projection(float parameter) : parameter_(parameter){};
 
-    float operator()(std::vector<float> integers)
+    float operator()(std::vector<float> const &integers)
     {
         float powerOfParameter = 1;
         float result = 0;
