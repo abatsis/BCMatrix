@@ -1,5 +1,5 @@
-#pragma
-#include <vector>
+#pragma once
+#include "orderedPoint.h"
 
 class Transformation
 {
@@ -8,22 +8,24 @@ class Transformation
 public:
     Transformation(std::vector<float> coefficients) : coefficients_(coefficients){};
 
-    std::vector<float> operator()(std::vector<float> const &integers, int const &translation)
+    OrderedPoint operator()(OrderedPoint const &orderedPoint, int const &translation)
     {
-        for (int i = 0; i < integers.size() - 1; i++)
+        auto size = orderedPoint.coords.size();
+        std::vector<float> newCoords(size, 0);
+        auto lastTerm = orderedPoint.coords.back();
+
+        for (int i = 0; i < size - 1; i++)
         {
-            integers[i + 1] = integers[i];
+            newCoords[i + 1] = orderedPoint.coords[i];
         }
 
-        auto lastTerm = integers.back();
-
-        for (int i = 0; i < integers.size(); i++)
+        for (int i = 0; i < size; i++)
         {
-            integers[i] = -coefficients_[i] * lastTerm;
+            newCoords[i] += -coefficients_[i] * lastTerm;
         }
 
-        integers[0] += translation;
+        newCoords[0] += translation;
 
-        return integers;
+        return {newCoords, 0};
     }
 };

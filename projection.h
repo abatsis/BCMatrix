@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 #include <vector>
 
 class Projection
@@ -6,15 +6,16 @@ class Projection
     float parameter_;
 
 public:
-    Projection(float parameter) : parameter_(parameter){};
+    Projection(float const& parameter) : parameter_(parameter){};
 
-    float operator()(std::vector<float> const &integers)
+    auto operator()(OrderedPoint const &point) const -> float
     {
+        auto coords = point.coords;
         float powerOfParameter = 1;
         float result = 0;
-        for (auto const &integer : integers)
+        for (auto const &coord : coords)
         {
-            result = result + integer * powerOfParameter;
+            result = result + coord * powerOfParameter;
             powerOfParameter = powerOfParameter * parameter_;
         }
         return result;
