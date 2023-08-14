@@ -15,10 +15,10 @@ template <typename T>
 int main(int argc, char *argv[])
 {
     std::vector<float> coords = {1,0,0,3};
-    OrderedPoint point = {coords, 0};
+    OrderedPoint point = {{1,0,0,3}, 0};
 
     printVector(point.coords);
-    auto transform = Transformation(std::vector<float>{0,0,0,5});
+    auto transform = Transformation({0,0,0,5});
     auto child_point = transform(point,0);
     printVector(child_point.coords);
 
@@ -52,5 +52,6 @@ int main(int argc, char *argv[])
     auto boundary = Boundary(conditions);
 
     std::cout << "is in boundary: " << boundary.encloses(point) << std::endl;
+
 
 }
