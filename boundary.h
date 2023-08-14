@@ -7,12 +7,13 @@ class Condition
 {
     Projection projection_;
     float bound_;
+    float epsilon_ = 0.01;
 
 public:
     Condition(Projection const& projection, float const& bound) : projection_(projection), bound_(bound){};
 
     auto isSatisfiedBy(OrderedPoint const& point) const -> bool{
-        return std::abs(projection_(point)) <= bound_;
+        return std::abs(projection_(point)) <= bound_ + epsilon_;
     }
 };
 
