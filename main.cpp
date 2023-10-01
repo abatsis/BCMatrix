@@ -3,55 +3,63 @@
 #include <iostream>
 #include "projection.h"
 #include "boundary.h"
+#include "latticeGraph.h"
+#include <Eigen/Core>
+#include <Eigen/SparseCore>
+#include <Spectra/GenEigsSolver.h>
+#include <Spectra/MatOp/SparseGenMatProd.h>
+#include "DataBase.h"
 
-template <typename T>
- static auto printVector(std::vector<T> const& aVector) {
-    for (auto const& i : aVector){
-        std::cout << i << std::endl;
+typedef Eigen::Triplet<double> T;
+using matrixOperation = Spectra::SparseGenMatProd<double>;
+
+static auto graphToMatrix(LatticeGraph &graph) -> Eigen::SparseMatrix<double>
+{
+    auto edges = graph.getEdges();
+    auto numberOfEdges = edges->size();
+    auto numberOfNodes = graph.numberOfNodes();
+
+    std::vector<T> tripletList;
+    tripletList.reserve(numberOfEdges);
+    for (auto &edge : *edges)
+    {
+        auto entryRow = edge.start->position;
+        auto entryColumn = edge.end->position;
+        auto entry = edge.weight;
+        tripletList.push_back(T(entryRow, entryColumn, entry));
     }
-    std::cout << std::endl;
+    Eigen::SparseMatrix<double> matrix(numberOfNodes, numberOfNodes);
+    matrix.setFromTriplets(tripletList.begin(), tripletList.end());
+    return matrix;
+}
+
+static auto computeSpectralRadius(Eigen::SparseMatrix<double> &matrix, int const &convergenceSpeed) -> double
+{
+    matrixOperation op(matrix);
+    Spectra::GenEigsSolver<matrixOperation> eigs(op, 1, convergenceSpeed);
+    eigs.init();
+    eigs.compute(Spectra::SortRule::LargestMagn);
+    Eigen::VectorXcd eigenvalues;
+    eigenvalues = eigs.eigenvalues();
+    auto spectralRadius = eigenvalues.cwiseAbs().maxCoeff();
+    return spectralRadius;
 }
 
 int main(int argc, char *argv[])
 {
-    std::vector<float> coords = {1,0,0,3};
-    OrderedPoint point = {{1,0,0,3}, 0};
+    std::string filePath = argv[1];
+    DataBase database;
+    database.readFile(filePath);
+    auto randomWalk = database.getRandomWalk();
+    auto boundary = database.getBoundary();
+    auto shortingProjection = database.getShortingProjection();
 
-    printVector(point.coords);
-    auto transform = Transformation({0,0,0,5});
-    auto child_point = transform(point,0);
-    printVector(child_point.coords);
+    auto graph = LatticeGraph(randomWalk, boundary, shortingProjection);
 
-    std::vector<int> translations = {-1,0,1};
-    std::vector<float> weights = {0.5,1,0.5};
+    auto matrix = graphToMatrix(graph);
+    std::cout << "matrix complete" << std::endl;
 
-    auto randomWalk = RandomWalk(transform, translations, weights);
-    auto child_points = randomWalk.generateFrom(point);
-
-    for (auto i : child_points){
-        printVector(i.coords);
-    }
-
-    std::vector<Condition> conditions;
-    auto projection = Projection(2);
-    auto condition = Condition(projection, 1000);
-    conditions.emplace_back(condition);
-
-    projection = Projection(4);
-    condition = Condition(projection, 1000);
-    conditions.emplace_back(condition);
-
-    projection = Projection(1.45);
-    condition = Condition(projection, 1000);
-    conditions.emplace_back(condition);
-    
-    projection = Projection(3);
-    condition = Condition(projection, 1000);
-    conditions.emplace_back(condition);
-
-    auto boundary = Boundary(conditions);
-
-    std::cout << "is in boundary: " << boundary.encloses(point) << std::endl;
-
-
+    auto convergenceSpeed = std::min(20, graph.numberOfNodes());
+    auto spectralRadius = computeSpectralRadius(matrix, convergenceSpeed);
+    std::cout << "Spectral radius: " << spectralRadius << std::endl;
 }
