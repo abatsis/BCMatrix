@@ -3,15 +3,15 @@
 
 class Transformation
 {
-    std::vector<double> coefficients_;
+    std::vector<int> coefficients_;
 
 public:
-    Transformation(std::vector<double> coefficients) : coefficients_(coefficients){};
+    Transformation(std::vector<int> coefficients) : coefficients_(coefficients){};
 
     OrderedPoint operator()(OrderedPoint const &orderedPoint, int const &translation)
     {
         auto size = orderedPoint.coords.size();
-        std::vector<double> newCoords(size, 0);
+        std::vector<int> newCoords(size, 0);
         auto lastTerm = orderedPoint.coords.back();
 
         for (int i = 0; i < size - 1; i++)
@@ -34,7 +34,7 @@ public:
         return coefficients_.size();
     }
 
-    auto polynomial() -> std::vector<double> *
+    auto polynomial() -> std::vector<int> *
     {
         return &coefficients_;
     };
