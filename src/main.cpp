@@ -9,7 +9,6 @@
 #include <Spectra/GenEigsSolver.h>
 #include <Spectra/MatOp/SparseGenMatProd.h>
 #include "DataBase.h"
-#include <limits>
 
 typedef Eigen::Triplet<double> T;
 using matrixOperation = Spectra::SparseGenMatProd<double>;
@@ -64,10 +63,6 @@ static auto computeSpectralRadius(Eigen::SparseMatrix<double> &matrix, int const
 
 int main(int argc, char *argv[])
 {
-    int imin = std::numeric_limits<int>::min();
-    int imax = std::numeric_limits<int>::max();
-    std::cout << "(min, max)= ("
-              << imin << ", " << imax << ")" << std::endl;
     std::string filePath = argv[1];
     std::string exportPath = argv[2];
     DataBase database;
