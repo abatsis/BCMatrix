@@ -71,7 +71,7 @@ static auto stringContains(std::string &string, std::string substring) -> bool
 
 class DataBase
 {
-    std::vector<double> polynomial_;
+    std::vector<int> polynomial_;
     std::vector<int> translations_;
     double physicalProjection_;
     std::unique_ptr<Projection> shortingProjection_;
@@ -145,7 +145,7 @@ public:
             switch (type_)
             {
             case Type::POLYNOMIAL:
-                polynomial_ = readDoubles(line);
+                polynomial_ = readIntegers(line);
                 break;
             case Type::TRANSLATIONS:
                 translations_ = readIntegers(line);

@@ -9,9 +9,26 @@
 #include <Spectra/GenEigsSolver.h>
 #include <Spectra/MatOp/SparseGenMatProd.h>
 #include "DataBase.h"
+#include <limits>
 
 typedef Eigen::Triplet<double> T;
 using matrixOperation = Spectra::SparseGenMatProd<double>;
+
+static auto exportGraph(LatticeGraph &graph, std::string filePath)
+{
+    if (filePath.empty())
+        return;
+
+    std::ofstream newFile(filePath);
+
+    auto edges = graph.getEdges();
+    for (auto &edge : *edges)
+    {
+        newFile << edge.start.position << "," << edge.end.position << "," << edge.weight << "\n";
+    }
+
+    newFile.close();
+}
 
 static auto graphToMatrix(LatticeGraph &graph) -> Eigen::SparseMatrix<double>
 {
@@ -23,8 +40,8 @@ static auto graphToMatrix(LatticeGraph &graph) -> Eigen::SparseMatrix<double>
     tripletList.reserve(numberOfEdges);
     for (auto &edge : *edges)
     {
-        auto entryRow = edge.start->position;
-        auto entryColumn = edge.end->position;
+        auto entryRow = edge.start.position;
+        auto entryColumn = edge.end.position;
         auto entry = edge.weight;
         tripletList.push_back(T(entryRow, entryColumn, entry));
     }
@@ -47,7 +64,12 @@ static auto computeSpectralRadius(Eigen::SparseMatrix<double> &matrix, int const
 
 int main(int argc, char *argv[])
 {
+    int imin = std::numeric_limits<int>::min();
+    int imax = std::numeric_limits<int>::max();
+    std::cout << "(min, max)= ("
+              << imin << ", " << imax << ")" << std::endl;
     std::string filePath = argv[1];
+    std::string exportPath = argv[2];
     DataBase database;
     database.readFile(filePath);
     auto randomWalk = database.getRandomWalk();
@@ -55,11 +77,14 @@ int main(int argc, char *argv[])
     auto shortingProjection = database.getShortingProjection();
 
     auto graph = LatticeGraph(randomWalk, boundary, shortingProjection);
+    auto numberOfNodes = graph.numberOfNodes();
+    exportGraph(graph, exportPath);
 
     auto matrix = graphToMatrix(graph);
-    std::cout << "matrix complete" << std::endl;
+    std::cout << "Matrix complete. Size is " << numberOfNodes << std::endl;
+    graph.clear();
 
-    auto convergenceSpeed = std::min(20, graph.numberOfNodes());
+    auto convergenceSpeed = std::min(20, numberOfNodes - 2);
     auto spectralRadius = computeSpectralRadius(matrix, convergenceSpeed);
     std::cout << "Spectral radius: " << spectralRadius << std::endl;
 }

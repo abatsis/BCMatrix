@@ -46,7 +46,7 @@ public:
         return transform_.getDimension();
     }
 
-    auto getTransormationPolynomial() -> std::vector<double> *
+    auto getTransormationPolynomial() -> std::vector<int> *
     {
         return transform_.polynomial();
     }
