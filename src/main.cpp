@@ -13,11 +13,12 @@
 typedef Eigen::Triplet<double> T;
 using matrixOperation = Spectra::SparseGenMatProd<double>;
 
-static auto exportGraph(LatticeGraph &graph, std::string filePath)
+static auto exportGraph(LatticeGraph &graph, std::string exportDir)
 {
-    if (filePath.empty())
+    if (exportDir.empty())
         return;
 
+    auto filePath = exportDir + "/graph.csv";
     std::ofstream newFile(filePath);
 
     auto edges = graph.getEdges();
@@ -26,6 +27,14 @@ static auto exportGraph(LatticeGraph &graph, std::string filePath)
         newFile << edge.start.position << "," << edge.end.position << "," << edge.weight << "\n";
     }
 
+    newFile.close();
+}
+
+static auto exportReport(double const &spectralRadius, std::string exportDir)
+{
+    auto reportPath = exportDir + "/report.txt";
+    std::ofstream newFile(reportPath);
+    newFile << "Spectral radius: " << spectralRadius << std::endl;
     newFile.close();
 }
 
@@ -64,7 +73,8 @@ static auto computeSpectralRadius(Eigen::SparseMatrix<double> &matrix, int const
 int main(int argc, char *argv[])
 {
     std::string filePath = argv[1];
-    std::string exportPath = argv[2];
+    std::string exportDir = argv[2];
+
     DataBase database;
     database.readFile(filePath);
     auto randomWalk = database.getRandomWalk();
@@ -73,7 +83,7 @@ int main(int argc, char *argv[])
 
     auto graph = LatticeGraph(randomWalk, boundary, shortingProjection);
     auto numberOfNodes = graph.numberOfNodes();
-    exportGraph(graph, exportPath);
+    exportGraph(graph, exportDir);
 
     auto matrix = graphToMatrix(graph);
     std::cout << "Matrix complete. Size is " << numberOfNodes << std::endl;
@@ -81,5 +91,8 @@ int main(int argc, char *argv[])
 
     auto convergenceSpeed = std::min(20, numberOfNodes - 2);
     auto spectralRadius = computeSpectralRadius(matrix, convergenceSpeed);
-    std::cout << "Spectral radius: " << spectralRadius << std::endl;
+    exportReport(spectralRadius, exportDir);
+    std::cout << "*********************" << std::endl
+              << "Finished successfully" << std::endl
+              << "*********************" << std::endl;
 }
